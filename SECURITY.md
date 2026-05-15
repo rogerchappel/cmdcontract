@@ -1,58 +1,28 @@
-# Security Policy
+# Security
 
-## Supported Versions
+CmdContract runs shell commands from contract files. Please report security issues privately before opening public issues.
 
-Replace this section with the supported versions for `cmdcontract`.
+## Supported versions
 
-Example:
+The current pre-1.0 line receives best-effort security fixes on `main`.
 
-```md
-| Version | Supported |
-| --- | --- |
-| .x | Yes |
-| < .0 | No |
-```
+## Reporting
 
-If the project does not publish versioned releases yet, say that clearly.
+Open a private GitHub security advisory if available, or contact the maintainer through the repository profile.
 
-## Reporting a Vulnerability
+Please include:
 
-Please do not report suspected vulnerabilities in public issues, pull requests, or discussions.
+- The contract file or minimal reproduction.
+- The command that was run.
+- Expected vs actual behavior.
+- Whether secrets, network access, or filesystem writes were involved.
 
-Ask maintainers for the private security reporting path before sharing details.
+## Current safeguards
 
-If no private reporting path exists yet, ask maintainers through public project channels for a private reporting path. Do not include exploit details, secrets, personal data, or sensitive technical details in public messages.
+- Temporary workspaces.
+- Workspace-relative path checks.
+- Minimal inherited environment.
+- Conservative README generator skips for common destructive commands.
+- Secret-looking output redaction.
 
-## What to Include
-
-When a private reporting path is available, include:
-
-- A clear description of the issue.
-- Affected versions, files, packages, workflows, or configuration.
-- Steps to reproduce, proof of concept, or attack scenario when safe to share.
-- Potential impact.
-- Suggested mitigation, if known.
-
-## Response Expectations
-
-Maintainers review good-faith reports as capacity allows.
-
-Do not imply paid support, guaranteed response times, guaranteed fixes, or service-level agreements unless `cmdcontract` explicitly provides them.
-
-## Scope
-
-In scope:
-
-- Vulnerabilities in cmdcontract.
-- Insecure default configuration shipped by this project.
-- CI, release, or dependency guidance maintained by this project.
-
-Out of scope:
-
-- General support requests.
-- Requests for guaranteed maintenance timelines.
-- Issues in unrelated downstream projects.
-
-## Disclosure
-
-Coordinate disclosure with maintainers before publishing vulnerability details.
+These are guardrails, not a sandbox. Do not run untrusted contracts on a machine with sensitive access.
