@@ -1,0 +1,19 @@
+version: 1
+defaults:
+  timeoutMs: 5000
+contracts:
+  - name: reads copied fixture
+    command: cat data/message.txt
+    fixtures:
+      - from: ../fixtures/hello/message.txt
+        to: data/message.txt
+    expect:
+      exitCode: 0
+      stdoutContains:
+        - hello from fixture
+  - name: normalizes timestamps
+    command: node -e "console.log('started 2026-05-16T00:00:00.000Z in 42ms')"
+    expect:
+      exitCode: 0
+      stdoutContains:
+        - "<timestamp> in <duration>"
