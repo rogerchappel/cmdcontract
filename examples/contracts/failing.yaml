@@ -1,0 +1,8 @@
+version: 1
+contracts:
+  - name: documents validation failure output
+    command: node -e "console.error('nope'); process.exit(2)"
+    expect:
+      exitCode: 0
+      stderrContains:
+        - nope
