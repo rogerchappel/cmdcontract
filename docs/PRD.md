@@ -1,6 +1,6 @@
 # CmdContract PRD
 
-Status: in-progress
+Status: MVP complete
 
 ## One-liner
 
