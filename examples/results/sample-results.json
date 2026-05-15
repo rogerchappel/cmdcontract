@@ -1,0 +1,21 @@
+{
+  "contractPath": "examples/contracts/happy.yaml",
+  "startedAt": "2026-05-16T00:00:00.000Z",
+  "durationMs": 12,
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "results": [
+    {
+      "name": "reads copied fixture",
+      "command": "cat data/message.txt",
+      "passed": true,
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "durationMs": 5,
+      "stdout": "hello from fixture",
+      "stderr": "",
+      "diagnostics": []
+    }
+  ]
+}
