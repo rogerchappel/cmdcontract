@@ -1,10 +1,12 @@
 {
   "project": "cmdcontract",
   "owner": "factory-subagent",
-  "workspace": "/Users/roger/Developer/my-opensource/cmdcontract",
+  "workspace": "/Users/roger/Developer/my-opensource/_worktrees/20260520-am/cmdcontract",
+  "mainCheckout": "/Users/roger/Developer/my-opensource/cmdcontract",
   "repo": "rogerchappel/cmdcontract",
   "rules": [
-    "Work only in this repo",
+    "Work only in the assigned factory worktree",
+    "Do not edit the main checkout",
     "Local-first deterministic MVP",
     "Fixture-backed tests and CLI smoke",
     "Atomic meaningful commits",
