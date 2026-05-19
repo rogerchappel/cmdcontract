@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { initFromReadme } from './init.js';
 import { formatSummary } from './report.js';
 import { runContractFile } from './runner.js';
@@ -64,7 +65,11 @@ async function runCommand(args: ParsedArgs): Promise<number> {
   const format = outputFormat(args);
   const summary = await runContractFile(contractPath, { keepWorkspace: Boolean(args.flags['keep-workspace']) });
   process.stdout.write(formatSummary(summary, format));
-  if (stringFlag(args, 'out')) await fs.writeFile(stringFlag(args, 'out')!, JSON.stringify(summary, null, 2), 'utf8');
+  const out = stringFlag(args, 'out');
+  if (out) {
+    await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
+    await fs.writeFile(out, JSON.stringify(summary, null, 2), 'utf8');
+  }
   return summary.failed === 0 ? 0 : 1;
 }
 
