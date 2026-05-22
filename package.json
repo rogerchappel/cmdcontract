@@ -28,7 +28,7 @@
     "test": "npm run build && node --test test/*.test.js",
     "smoke": "npm run build && node dist/cli.js run examples/contracts/happy.yaml --format tap && node dist/cli.js init --from examples/README-fixture.md --out .cmdcontract/smoke-readme.yaml && node dist/cli.js report examples/results/sample-results.json --format markdown",
     "package:smoke": "npm pack --dry-run",
-    "release:check": "npm test && npm run package:smoke"
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "cli",
