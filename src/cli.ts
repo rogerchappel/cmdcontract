@@ -16,6 +16,11 @@ interface ParsedArgs {
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   try {
+    if (args.flags.version) {
+      console.log("0.1.0");
+      return 0;
+    }
+
     if (!args.command || args.flags.help || args.flags.h) {
       console.log(help());
       return 0;
@@ -34,7 +39,14 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
-  const [command, ...rest] = argv;
+  let command: string | undefined;
+  let rest: string[];
+  if (argv[0] && argv[0].startsWith("-")) {
+    command = undefined;
+    rest = argv;
+  } else {
+    [command, ...rest] = argv;
+  }
   const flags: Record<string, string | boolean> = {};
   const positionals: string[] = [];
   for (let index = 0; index < rest.length; index += 1) {
