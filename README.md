@@ -99,3 +99,17 @@ A real fixture-backed smoke is included at `examples/contracts/happy.yaml`.
 ## Personality
 
 CmdContract is the pedantic friend who actually runs the example before saying “ship it.” It is small on purpose: fewer knobs, fewer services, fewer excuses for stale docs.
+
+## Development
+
+Run the same checks locally before opening a change:
+
+```sh
+npm ci
+npm run check
+npm run build
+npm test
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
