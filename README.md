@@ -18,7 +18,7 @@ npm run build
 node dist/cli.js --help
 ```
 
-## Three-minute workflow
+## Quick Start
 
 Generate a starter spec from README command fences:
 
@@ -95,6 +95,9 @@ bash scripts/validate.sh
 ```
 
 A real fixture-backed smoke is included at `examples/contracts/happy.yaml`.
+`npm run package:smoke` also checks that the packed release candidate contains
+the CLI entrypoint, examples, README, license, changelog, security policy, and
+contributing guide.
 
 ## Personality
 
