@@ -116,3 +116,14 @@ npm run smoke
 npm run package:smoke
 npm run release:check
 ```
+
+## Usage
+
+Inspect the available commands before running the CLI against a project:
+
+```sh
+npx cmdcontract --help
+cmdcontract --help
+```
+
+Use fixture or sample input from this repository first when evaluating changes, then run the same command against your target project.
