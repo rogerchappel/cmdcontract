@@ -13,6 +13,16 @@ test('CLI inspect reports contract names', () => {
   assert.match(result.stdout, /reads copied fixture/);
 });
 
+test('CLI runs when invoked through an npm-style bin symlink', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-bin-'));
+  const linkedCli = path.join(tmp, 'cmdcontract');
+  fs.symlinkSync(cli, linkedCli);
+  const result = spawnSync(process.execPath, [linkedCli, '--help'], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /cmdcontract - executable CLI contract specs/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 test('CLI run returns non-zero for failing contracts', () => {
   const result = spawnSync(process.execPath, [cli, 'run', 'examples/contracts/failing.yaml', '--format', 'tap'], { encoding: 'utf8' });
   assert.equal(result.status, 1);
