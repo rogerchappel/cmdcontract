@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { initFromReadme } from './init.js';
 import { formatSummary } from './report.js';
 import { runContractFile } from './runner.js';
@@ -116,6 +118,6 @@ function help(): string {
   return `cmdcontract - executable CLI contract specs that stay honest\n\nUsage:\n  cmdcontract init --from README.md --out contracts/readme.yaml\n  cmdcontract run contracts/readme.yaml [--format json|tap|markdown] [--out results.json]\n  cmdcontract report results.json --format markdown\n  cmdcontract inspect contracts/readme.yaml\n\nSafety defaults:\n  - Commands run in a temporary workspace.\n  - Only PATH, HOME, CI, NO_COLOR, and contract env are passed through.\n  - Fixture paths must stay inside the contract directory/workspace.\n`;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   process.exitCode = await main();
 }
