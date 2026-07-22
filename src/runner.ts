@@ -44,7 +44,7 @@ async function runOne(contract: CommandContract, file: ContractFile, sourceRoot:
     const stdout = normalizeOutput(redactSecrets(execution.stdout));
     const stderr = normalizeOutput(redactSecrets(execution.stderr));
     const expectedExitCode = contract.expect?.exitCode ?? 0;
-    const diagnostics = collectDiagnostics(contract, execution.exitCode, expectedExitCode, stdout, stderr);
+    const diagnostics = collectDiagnostics(contract, execution.exitCode, expectedExitCode, stdout, stderr, execution.timedOut);
     return {
       name: contract.name,
       command: contract.command,
@@ -61,11 +61,19 @@ async function runOne(contract: CommandContract, file: ContractFile, sourceRoot:
   }
 }
 
-function execute(command: string, cwd: string, env: Record<string, string> | undefined, timeoutMs: number): Promise<{ exitCode: number | null; stdout: string; stderr: string }> {
+interface ExecutionResult {
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  timedOut: boolean;
+}
+
+function execute(command: string, cwd: string, env: Record<string, string> | undefined, timeoutMs: number): Promise<ExecutionResult> {
   return new Promise((resolve) => {
     const child = spawn(command, {
       cwd,
       shell: true,
+      detached: process.platform !== 'win32',
       env: {
         PATH: process.env.PATH ?? '',
         HOME: process.env.HOME ?? '',
@@ -77,9 +85,14 @@ function execute(command: string, cwd: string, env: Record<string, string> | und
     });
     let stdout = '';
     let stderr = '';
+    let timedOut = false;
+    let escalationTimer: NodeJS.Timeout | undefined;
     const timer = setTimeout(() => {
+      timedOut = true;
       stderr += `\ncmdcontract: command timed out after ${timeoutMs}ms`;
-      child.kill('SIGTERM');
+      terminateProcessTree(child.pid, 'SIGTERM');
+      escalationTimer = setTimeout(() => terminateProcessTree(child.pid, 'SIGKILL'), 100);
+      escalationTimer.unref();
     }, timeoutMs);
     child.stdout?.setEncoding('utf8');
     child.stderr?.setEncoding('utf8');
@@ -87,13 +100,31 @@ function execute(command: string, cwd: string, env: Record<string, string> | und
     child.stderr?.on('data', (chunk) => (stderr += chunk));
     child.on('close', (code) => {
       clearTimeout(timer);
-      resolve({ exitCode: code, stdout, stderr });
+      if (escalationTimer) clearTimeout(escalationTimer);
+      resolve({ exitCode: code, stdout, stderr, timedOut });
     });
   });
 }
 
-function collectDiagnostics(contract: CommandContract, actualExitCode: number | null, expectedExitCode: number, stdout: string, stderr: string): string[] {
+function terminateProcessTree(pid: number | undefined, signal: NodeJS.Signals): void {
+  if (pid === undefined) return;
+  if (process.platform === 'win32') {
+    const force = signal === 'SIGKILL' ? ['/F'] : [];
+    const killer = spawn('taskkill', ['/PID', String(pid), '/T', ...force], { stdio: 'ignore' });
+    killer.on('error', () => undefined);
+    return;
+  }
+  try {
+    process.kill(-pid, signal);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code !== 'ESRCH') throw error;
+  }
+}
+
+function collectDiagnostics(contract: CommandContract, actualExitCode: number | null, expectedExitCode: number, stdout: string, stderr: string, timedOut: boolean): string[] {
   const diagnostics: string[] = [];
+  if (timedOut) diagnostics.push('command timed out');
   if (actualExitCode !== expectedExitCode) diagnostics.push(`expected exit ${expectedExitCode}, got ${actualExitCode}`);
   for (const expected of contract.expect?.stdoutContains ?? []) {
     if (!stdout.includes(expected)) diagnostics.push(`stdout did not contain ${JSON.stringify(expected)}`);

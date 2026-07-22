@@ -17,3 +17,15 @@ test('runContractFile records diagnostics for expectation failures', async () =>
   assert.equal(summary.failed, 1);
   assert.match(summary.results[0].diagnostics.join('\n'), /expected exit 0, got 2/);
 });
+
+test('runContractFile fails timed-out commands and terminates their process tree', async () => {
+  const summary = await runContractFile(path.join(root, 'test/fixtures/timeout.yaml'));
+
+  assert.equal(summary.passed, 0);
+  assert.equal(summary.failed, 2);
+  for (const result of summary.results) {
+    assert.equal(result.passed, false);
+    assert.match(result.diagnostics.join('\n'), /command timed out/);
+  }
+  assert.ok(summary.durationMs < 1_000, `expected prompt termination, took ${summary.durationMs}ms`);
+});
