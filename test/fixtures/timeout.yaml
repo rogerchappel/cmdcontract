@@ -1,0 +1,8 @@
+version: 1
+contracts:
+  - name: times out a spawned child
+    command: node -e "setTimeout(() => {}, 1500)"
+    timeoutMs: 50
+  - name: escalates when a spawned child ignores termination
+    command: node -e "process.on('SIGTERM', () => {}); setTimeout(() => {}, 1500)"
+    timeoutMs: 50
