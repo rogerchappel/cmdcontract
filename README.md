@@ -6,16 +6,28 @@ Executable CLI contract specs that stay honest ✅
 
 ## Install
 
+`cmdcontract` is not published to the npm registry yet. From a clean checkout,
+build and pack the release candidate, then install that tarball in a project:
+
 ```bash
-npm install --save-dev cmdcontract
+git clone https://github.com/rogerchappel/cmdcontract.git
+cd cmdcontract
+npm ci
+npm run build
+package_file="$(npm pack --silent)"
+mkdir -p ../cmdcontract-example
+cd ../cmdcontract-example
+npm init -y
+npm install --save-dev "../cmdcontract/$package_file"
+npx cmdcontract --help
 ```
 
-Or run from this repo:
+### After npm publication
+
+Once a release is available on npm, projects will be able to install it with:
 
 ```bash
-npm install
-npm run build
-node dist/cli.js --help
+npm install --save-dev cmdcontract
 ```
 
 ## Quick Start
@@ -122,8 +134,14 @@ npm run release:check
 Inspect the available commands before running the CLI against a project:
 
 ```sh
-npx cmdcontract --help
-cmdcontract --help
+npm exec -- cmdcontract --help
 ```
 
 Use fixture or sample input from this repository first when evaluating changes, then run the same command against your target project.
+
+## Release policy
+
+Version tags currently create a GitHub release containing the packed npm
+tarball. They intentionally do not publish to npm. Registry installation
+instructions above therefore remain conditional until npm publishing is added
+and a package is verified on the registry.

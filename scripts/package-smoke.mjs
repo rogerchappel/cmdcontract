@@ -6,6 +6,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const packageJson = JSON.parse(await readFile("package.json", "utf8"));
+const readme = await readFile("README.md", "utf8");
+
+const publicationHeading = "### After npm publication";
+const publicationIndex = readme.indexOf(publicationHeading);
+const registryInstall = "npm install --save-dev cmdcontract";
+
+if (!readme.includes("`cmdcontract` is not published to the npm registry yet.")) {
+  throw new Error("README must state that cmdcontract is not published to npm");
+}
+
+if (!readme.includes('npm install --save-dev "../cmdcontract/$package_file"')) {
+  throw new Error("README must document installation from the locally packed tarball");
+}
+
+if (publicationIndex === -1 || readme.indexOf(registryInstall) < publicationIndex) {
+  throw new Error("README registry installation must be conditional on npm publication");
+}
+
 const output = execFileSync("npm", ["pack", "--dry-run", "--json"], {
   encoding: "utf8",
   stdio: ["ignore", "pipe", "inherit"],
