@@ -3,7 +3,7 @@
 ## `cmdcontract init`
 
 ```bash
-cmdcontract init --from README.md --out contracts/readme.yaml
+cmdcontract init [--from README.md] [--out contracts/readme.yaml]
 ```
 
 Extracts shell-ish fenced commands and writes a starter contract file.
@@ -11,7 +11,7 @@ Extracts shell-ish fenced commands and writes a starter contract file.
 ## `cmdcontract run`
 
 ```bash
-cmdcontract run contracts/readme.yaml --format json --out .cmdcontract/results.json
+cmdcontract run <contract-file> [--format json|tap|markdown] [--out .cmdcontract/results.json] [--keep-workspace]
 ```
 
 Runs each contract and prints `json`, `tap`, or `markdown`. Exit code is `1` when any contract fails.
@@ -19,7 +19,7 @@ Runs each contract and prints `json`, `tap`, or `markdown`. Exit code is `1` whe
 ## `cmdcontract report`
 
 ```bash
-cmdcontract report .cmdcontract/results.json --format markdown
+cmdcontract report <results-json> [--format json|tap|markdown]
 ```
 
 Renders saved JSON results without rerunning commands.
@@ -27,7 +27,7 @@ Renders saved JSON results without rerunning commands.
 ## `cmdcontract inspect`
 
 ```bash
-cmdcontract inspect contracts/readme.yaml
+cmdcontract inspect <contract-file>
 ```
 
 Validates a contract file and prints the contract count plus names.

@@ -15,9 +15,14 @@ interface ParsedArgs {
   flags: Record<string, string | boolean>;
 }
 
+const valueFlags = new Set(['from', 'out', 'format']);
+
+class UsageError extends Error {}
+
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   const args = parseArgs(argv);
   try {
+    validateArgs(args);
     if (args.flags.version) {
       console.log("0.1.0");
       return 0;
@@ -36,6 +41,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     return 1;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
+    if (error instanceof UsageError) console.error(`\n${help()}`);
     return 1;
   }
 }
@@ -55,7 +61,13 @@ function parseArgs(argv: string[]): ParsedArgs {
     const token = rest[index];
     if (token.startsWith('--')) {
       const [key, inline] = token.slice(2).split('=', 2);
-      flags[key] = inline ?? (rest[index + 1] && !rest[index + 1].startsWith('-') ? rest[++index] : true);
+      if (inline !== undefined) {
+        flags[key] = inline;
+      } else if (valueFlags.has(key) && rest[index + 1] && !rest[index + 1].startsWith('-')) {
+        flags[key] = rest[++index];
+      } else {
+        flags[key] = true;
+      }
     } else if (token.startsWith('-')) {
       flags[token.slice(1)] = true;
     } else {
@@ -63,6 +75,37 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
   }
   return { command, positionals, flags };
+}
+
+function validateArgs(args: ParsedArgs): void {
+  const allowedFlags: Record<string, Set<string>> = {
+    init: new Set(['from', 'out']),
+    run: new Set(['format', 'out', 'keep-workspace']),
+    report: new Set(['format']),
+    inspect: new Set(),
+  };
+  const positionalCounts: Record<string, number> = { init: 0, run: 1, report: 1, inspect: 1 };
+  const globalFlags = new Set(['help', 'h', 'version']);
+  const allowed = args.command ? allowedFlags[args.command] : globalFlags;
+  if (!allowed) return;
+
+  for (const [name, value] of Object.entries(args.flags)) {
+    if (!allowed.has(name) && !globalFlags.has(name)) {
+      const context = args.command ? ` for ${args.command}` : '';
+      throw new UsageError(`Unknown option${context}: --${name}`);
+    }
+    if (valueFlags.has(name) && (value === true || value === '')) {
+      throw new UsageError(`Option --${name} requires a value`);
+    }
+    if (!valueFlags.has(name) && typeof value === 'string') {
+      throw new UsageError(`Option --${name} does not accept a value`);
+    }
+  }
+
+  const expected = positionalCounts[args.command ?? ''];
+  if (expected !== undefined && args.positionals.length !== expected) {
+    throw new UsageError(`${args.command} requires ${expected === 0 ? 'no positional arguments' : `exactly ${expected} positional argument`}`);
+  }
 }
 
 async function initCommand(args: ParsedArgs): Promise<number> {
@@ -115,7 +158,7 @@ function stringFlag(args: ParsedArgs, name: string): string | undefined {
 }
 
 function help(): string {
-  return `cmdcontract - executable CLI contract specs that stay honest\n\nUsage:\n  cmdcontract init --from README.md --out contracts/readme.yaml\n  cmdcontract run contracts/readme.yaml [--format json|tap|markdown] [--out results.json]\n  cmdcontract report results.json --format markdown\n  cmdcontract inspect contracts/readme.yaml\n\nSafety defaults:\n  - Commands run in a temporary workspace.\n  - Only PATH, HOME, CI, NO_COLOR, and contract env are passed through.\n  - Fixture paths must stay inside the contract directory/workspace.\n`;
+  return `cmdcontract - executable CLI contract specs that stay honest\n\nUsage:\n  cmdcontract init [--from README.md] [--out contracts/readme.yaml]\n  cmdcontract run <contract-file> [--format json|tap|markdown] [--out results.json] [--keep-workspace]\n  cmdcontract report <results-json> [--format json|tap|markdown]\n  cmdcontract inspect <contract-file>\n  cmdcontract --help | -h\n  cmdcontract --version\n\nSafety defaults:\n  - Commands run in a temporary workspace.\n  - Only PATH, HOME, CI, NO_COLOR, and contract env are passed through.\n  - Fixture paths must stay inside the contract directory/workspace.\n`;
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
