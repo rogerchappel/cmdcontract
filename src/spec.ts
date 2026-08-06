@@ -19,9 +19,12 @@ export function validateContractFile(value: unknown): ContractFile {
   if (!Array.isArray(candidate.contracts) || candidate.contracts.length === 0) {
     throw new CmdContractError('contract file must contain at least one contract', 'VALIDATION_ERROR');
   }
+  if (candidate.version !== undefined && candidate.version !== 1) {
+    throw new CmdContractError('version must be 1', 'VALIDATION_ERROR');
+  }
   const contracts = candidate.contracts.map(validateContract);
   return {
-    version: typeof candidate.version === 'number' ? candidate.version : 1,
+    version: 1,
     defaults: normalizeDefaults(candidate.defaults),
     contracts,
   };
@@ -37,7 +40,9 @@ function validateContract(value: unknown, index: number): CommandContract {
     command: assertNonEmptyString(candidate.command, `contracts[${index}].command`),
   };
   if (typeof candidate.cwd === 'string') contract.cwd = candidate.cwd;
-  if (typeof candidate.timeoutMs === 'number') contract.timeoutMs = candidate.timeoutMs;
+  if (candidate.timeoutMs !== undefined) {
+    contract.timeoutMs = positiveFiniteNumber(candidate.timeoutMs, `contracts[${index}].timeoutMs`);
+  }
   if (candidate.env && typeof candidate.env === 'object' && !Array.isArray(candidate.env)) {
     contract.env = stringRecord(candidate.env, `contracts[${index}].env`);
   }
@@ -68,9 +73,16 @@ function normalizeDefaults(value: unknown): ContractFile['defaults'] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const defaults = value as Record<string, unknown>;
   return {
-    timeoutMs: typeof defaults.timeoutMs === 'number' ? defaults.timeoutMs : undefined,
+    timeoutMs: defaults.timeoutMs === undefined ? undefined : positiveFiniteNumber(defaults.timeoutMs, 'defaults.timeoutMs'),
     env: defaults.env && typeof defaults.env === 'object' && !Array.isArray(defaults.env) ? stringRecord(defaults.env, 'defaults.env') : undefined,
   };
+}
+
+function positiveFiniteNumber(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    throw new CmdContractError(`${label} must be a positive finite number`, 'VALIDATION_ERROR');
+  }
+  return value;
 }
 
 function stringRecord(value: object, label: string): Record<string, string> {
