@@ -2,6 +2,8 @@
 
 CmdContract accepts YAML or JSON files. YAML is friendlier for hand-written examples; JSON is handy for generators.
 
+The only supported schema version is `version: 1`. Omitting `version` is equivalent to version 1; any other value is rejected before commands run. Both `defaults.timeoutMs` and a contract-level `timeoutMs` must be positive, finite numbers in milliseconds. Zero, negative, non-numeric, and non-finite values are validation errors.
+
 ```yaml
 version: 1
 defaults:
