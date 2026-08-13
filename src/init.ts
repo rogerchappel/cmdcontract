@@ -3,7 +3,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 import type { ContractFile } from './types.js';
 
-const FENCE = /```(?:bash|sh|shell|console)?\n([\s\S]*?)```/g;
+const FENCE = /```(bash|sh|shell|console)\s+cmdcontract\s*\n([\s\S]*?)```/g;
 
 export async function initFromReadme(readmePath: string, outPath: string): Promise<ContractFile> {
   const markdown = await fs.readFile(readmePath, 'utf8');
@@ -25,14 +25,18 @@ export async function initFromReadme(readmePath: string, outPath: string): Promi
 export function extractCommands(markdown: string): string[] {
   const commands: string[] = [];
   for (const match of markdown.matchAll(FENCE)) {
-    for (const line of match[1].split('\n')) {
-      const trimmed = line.trim();
-      const prompt = trimmed.match(/^\$\s+(.+)/);
-      if (prompt) commands.push(prompt[1]);
-      else if (/^(cmdcontract|node|npm|npx)\s+/.test(trimmed)) commands.push(trimmed);
-    }
+    const body = match[2];
+    const command = match[1] === 'console' ? consoleCommands(body) : body.trim();
+    if (command && !looksDangerous(command)) commands.push(command);
   }
-  return commands.filter((command) => !looksDangerous(command));
+  return commands;
+}
+
+function consoleCommands(body: string): string {
+  return body.split('\n')
+    .map((line) => line.match(/^\s*\$\s+(.*)$/)?.[1])
+    .filter((line): line is string => line !== undefined)
+    .join('\n');
 }
 
 function looksDangerous(command: string): boolean {

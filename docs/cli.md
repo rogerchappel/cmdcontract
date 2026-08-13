@@ -6,7 +6,13 @@
 cmdcontract init [--from README.md] [--out contracts/readme.yaml]
 ```
 
-Extracts shell-ish fenced commands and writes a starter contract file.
+Extracts explicitly marked `bash cmdcontract`, `sh cmdcontract`,
+`shell cmdcontract`, and `console cmdcontract` fences and writes a starter
+contract file. A whole fence becomes one shell command, retaining setup lines,
+variables, and directory changes. Every generated contract later runs in a
+separate fresh workspace. For `console`, only `$ ` prompt lines are retained.
+Unmarked fences, displayed console output, and marked fences containing known
+dangerous commands are skipped. Review generated contracts before running them.
 
 ## `cmdcontract run`
 
