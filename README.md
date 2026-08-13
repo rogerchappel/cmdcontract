@@ -38,6 +38,22 @@ Generate a starter spec from README command fences:
 cmdcontract init --from README.md --out contracts/readme.yaml
 ```
 
+Initialization is deliberately opt-in. It extracts fences whose info string is
+`bash cmdcontract`, `sh cmdcontract`, `shell cmdcontract`, or
+`console cmdcontract`. Each selected fence becomes one contract and runs in its
+own fresh temporary workspace, so setup lines, variables, and `cd` commands
+must be in the same fence. In `console` fences, only lines beginning with `$ `
+are retained; displayed output is ignored. Unmarked examples and selected
+fences containing a known dangerous command are skipped. Review the generated
+file before running it.
+
+For example, this complete, portable group is extracted and passes:
+
+```bash cmdcontract
+message='cmdcontract starter is ready'
+node -e "console.log(process.argv[1])" "$message"
+```
+
 Run the contract:
 
 ```bash
@@ -92,7 +108,7 @@ CmdContract is deliberately boring:
 - Fixture and `cwd` paths are blocked if they escape the workspace.
 - Only `PATH`, `HOME`, `CI`, `NO_COLOR`, and explicit contract env are passed through.
 - Obvious secret-looking `TOKEN`/`SECRET`/`PASSWORD`/`KEY` values are redacted from captured output.
-- README generation skips common foot-guns such as `rm -rf`, `sudo`, and `curl | sh`.
+- README generation only extracts explicitly marked shell fences and skips common foot-guns such as `rm -rf`, `sudo`, and `curl | sh`.
 
 Still: contracts execute shell commands. Review specs like code.
 
