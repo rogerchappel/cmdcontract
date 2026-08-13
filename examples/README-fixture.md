@@ -1,11 +1,8 @@
 # README command fixture
 
-```bash
-$ node -e "console.log('fixture readme command')"
-```
-
-```console
-$ cmdcontract --help
+```bash cmdcontract
+message='fixture readme command'
+node -e "console.log(process.argv[1])" "$message"
 ```
 
 Dangerous examples are skipped when generating starter contracts:

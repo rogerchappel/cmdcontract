@@ -35,6 +35,17 @@ test('CLI accepts separated values for init options', () => {
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+test('CLI runs contracts generated from the README fixture end to end', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-init-run-'));
+  const out = path.join(tmp, 'contract.yaml');
+  const init = runCli('init', '--from', 'examples/README-fixture.md', '--out', out);
+  assert.equal(init.status, 0, init.stderr);
+  const run = runCli('run', out, '--format', 'tap');
+  assert.equal(run.status, 0, run.stderr);
+  assert.match(run.stdout, /ok 1 - readme-command-1/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 test('CLI rejects malformed arguments with usage diagnostics', () => {
   const malformed = [
     [['run', 'examples/contracts/happy.yaml', '--bogus'], /Unknown option for run: --bogus/],
