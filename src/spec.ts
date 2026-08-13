@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import { CmdContractError, assertNonEmptyString } from './errors.js';
-import type { CommandContract, ContractFile } from './types.js';
+import type { CommandContract, ContractFile, FixtureCopyRule } from './types.js';
 
 export async function loadContractFile(filePath: string): Promise<ContractFile> {
   const text = await fs.readFile(filePath, 'utf8');
@@ -39,29 +39,30 @@ function validateContract(value: unknown, index: number): CommandContract {
     name: assertNonEmptyString(candidate.name, `contracts[${index}].name`),
     command: assertNonEmptyString(candidate.command, `contracts[${index}].command`),
   };
-  if (typeof candidate.cwd === 'string') contract.cwd = candidate.cwd;
+  if (candidate.cwd !== undefined) contract.cwd = stringValue(candidate.cwd, `contracts[${index}].cwd`);
   if (candidate.timeoutMs !== undefined) {
     contract.timeoutMs = positiveFiniteNumber(candidate.timeoutMs, `contracts[${index}].timeoutMs`);
   }
-  if (candidate.env && typeof candidate.env === 'object' && !Array.isArray(candidate.env)) {
-    contract.env = stringRecord(candidate.env, `contracts[${index}].env`);
+  if (candidate.env !== undefined) {
+    contract.env = stringRecord(objectValue(candidate.env, `contracts[${index}].env`), `contracts[${index}].env`);
   }
-  if (Array.isArray(candidate.fixtures)) {
-    contract.fixtures = candidate.fixtures.map((fixture, fixtureIndex) => {
+  if (candidate.fixtures !== undefined) {
+    contract.fixtures = arrayValue(candidate.fixtures, `contracts[${index}].fixtures`).map((fixture, fixtureIndex) => {
       if (!fixture || typeof fixture !== 'object') {
         throw new CmdContractError(`contracts[${index}].fixtures[${fixtureIndex}] must be an object`, 'VALIDATION_ERROR');
       }
       const rule = fixture as Record<string, unknown>;
-      return {
+      const normalized: FixtureCopyRule = {
         from: assertNonEmptyString(rule.from, `contracts[${index}].fixtures[${fixtureIndex}].from`),
-        to: typeof rule.to === 'string' ? rule.to : undefined,
       };
+      if (rule.to !== undefined) normalized.to = stringValue(rule.to, `contracts[${index}].fixtures[${fixtureIndex}].to`);
+      return normalized;
     });
   }
-  if (candidate.expect && typeof candidate.expect === 'object' && !Array.isArray(candidate.expect)) {
-    const expect = candidate.expect as Record<string, unknown>;
+  if (candidate.expect !== undefined) {
+    const expect = objectValue(candidate.expect, `contracts[${index}].expect`);
     contract.expect = {
-      exitCode: typeof expect.exitCode === 'number' ? expect.exitCode : 0,
+      exitCode: expect.exitCode === undefined ? 0 : numberValue(expect.exitCode, `contracts[${index}].expect.exitCode`),
       stdoutContains: stringArray(expect.stdoutContains, `contracts[${index}].expect.stdoutContains`),
       stderrContains: stringArray(expect.stderrContains, `contracts[${index}].expect.stderrContains`),
     };
@@ -70,12 +71,34 @@ function validateContract(value: unknown, index: number): CommandContract {
 }
 
 function normalizeDefaults(value: unknown): ContractFile['defaults'] {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
-  const defaults = value as Record<string, unknown>;
+  if (value === undefined) return undefined;
+  const defaults = objectValue(value, 'defaults');
   return {
     timeoutMs: defaults.timeoutMs === undefined ? undefined : positiveFiniteNumber(defaults.timeoutMs, 'defaults.timeoutMs'),
-    env: defaults.env && typeof defaults.env === 'object' && !Array.isArray(defaults.env) ? stringRecord(defaults.env, 'defaults.env') : undefined,
+    env: defaults.env === undefined ? undefined : stringRecord(objectValue(defaults.env, 'defaults.env'), 'defaults.env'),
   };
+}
+
+function objectValue(value: unknown, label: string): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new CmdContractError(`${label} must be an object`, 'VALIDATION_ERROR');
+  }
+  return value as Record<string, unknown>;
+}
+
+function arrayValue(value: unknown, label: string): unknown[] {
+  if (!Array.isArray(value)) throw new CmdContractError(`${label} must be an array`, 'VALIDATION_ERROR');
+  return value;
+}
+
+function stringValue(value: unknown, label: string): string {
+  if (typeof value !== 'string') throw new CmdContractError(`${label} must be a string`, 'VALIDATION_ERROR');
+  return value;
+}
+
+function numberValue(value: unknown, label: string): number {
+  if (typeof value !== 'number') throw new CmdContractError(`${label} must be a number`, 'VALIDATION_ERROR');
+  return value;
 }
 
 function positiveFiniteNumber(value: unknown, label: string): number {
