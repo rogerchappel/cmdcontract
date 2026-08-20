@@ -33,6 +33,8 @@ jobs:
           npm --prefix /tmp/releasebox run build
       - name: ReleaseBox readiness check
         run: node /tmp/releasebox/bin/releasebox.js check .
+      - name: Verify release tag matches package version
+        run: node scripts/check-release-tag.mjs
       - name: Run release checks
         run: npm run release:check
       # Tags intentionally publish a GitHub release asset only. npm registry
