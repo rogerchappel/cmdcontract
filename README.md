@@ -161,3 +161,9 @@ Version tags currently create a GitHub release containing the packed npm
 tarball. They intentionally do not publish to npm. Registry installation
 instructions above therefore remain conditional until npm publishing is added
 and a package is verified on the registry.
+
+The release tag must be exactly `v` followed by the version in `package.json`
+(for example, package version `0.1.0` requires tag `v0.1.0`). The release
+workflow validates this identity before running `npm pack` or creating a
+GitHub release. `npm run release:contract` exercises the same contract during
+local and dry-run verification.
