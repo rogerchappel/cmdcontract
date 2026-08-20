@@ -31,7 +31,8 @@
     "test": "npm run build && node --test test/*.test.js",
     "smoke": "npm run build && node dist/cli.js run examples/contracts/happy.yaml --format tap && node dist/cli.js init --from examples/README-fixture.md --out .cmdcontract/smoke-readme.yaml && node dist/cli.js report examples/results/sample-results.json --format markdown",
     "package:smoke": "npm run build && node scripts/package-smoke.mjs",
-    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
+    "release:contract": "GITHUB_REF_NAME=v$npm_package_version node scripts/check-release-tag.mjs",
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke && npm run release:contract"
   },
   "keywords": [
     "cli",
