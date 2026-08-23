@@ -62,7 +62,7 @@ function validateContract(value: unknown, index: number): CommandContract {
   if (candidate.expect !== undefined) {
     const expect = objectValue(candidate.expect, `contracts[${index}].expect`);
     contract.expect = {
-      exitCode: expect.exitCode === undefined ? 0 : numberValue(expect.exitCode, `contracts[${index}].expect.exitCode`),
+      exitCode: expect.exitCode === undefined ? 0 : exitCodeValue(expect.exitCode, `contracts[${index}].expect.exitCode`),
       stdoutContains: stringArray(expect.stdoutContains, `contracts[${index}].expect.stdoutContains`),
       stderrContains: stringArray(expect.stderrContains, `contracts[${index}].expect.stderrContains`),
     };
@@ -96,8 +96,10 @@ function stringValue(value: unknown, label: string): string {
   return value;
 }
 
-function numberValue(value: unknown, label: string): number {
-  if (typeof value !== 'number') throw new CmdContractError(`${label} must be a number`, 'VALIDATION_ERROR');
+function exitCodeValue(value: unknown, label: string): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value) || value < 0 || value > 255) {
+    throw new CmdContractError(`${label} must be an integer from 0 to 255`, 'VALIDATION_ERROR');
+  }
   return value;
 }
 
