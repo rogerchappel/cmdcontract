@@ -92,7 +92,7 @@ test('CLI inspect rejects malformed YAML and JSON optional fields', () => {
     ['fixtures', { contracts: [{ ...contract, fixtures: 'wrong' }] }, /fixtures must be an array/],
     ['fixture-to', { contracts: [{ ...contract, fixtures: [{ from: 'source', to: 42 }] }] }, /fixtures\[0\]\.to must be a string/],
     ['expect', { contracts: [{ ...contract, expect: [] }] }, /expect must be an object/],
-    ['exit-code', { contracts: [{ ...contract, expect: { exitCode: '0' } }] }, /expect\.exitCode must be a number/],
+    ['exit-code', { contracts: [{ ...contract, expect: { exitCode: '0' } }] }, /expect\.exitCode must be an integer from 0 to 255/],
     ['stdout', { contracts: [{ ...contract, expect: { stdoutContains: 'help' } }] }, /stdoutContains must be an array of strings/],
     ['stderr', { contracts: [{ ...contract, expect: { stderrContains: [42] } }] }, /stderrContains must be an array of strings/],
   ];
@@ -116,6 +116,25 @@ test('CLI run cannot silently pass a malformed expectation', () => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /contracts\[0\]\.expect must be an object/);
   assert.doesNotMatch(result.stdout, /ok 1/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
+test('CLI inspect and run reject impossible exit codes before commands execute', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-invalid-exit-'));
+  const marker = path.join(tmp, 'executed');
+  for (const [name, contents] of [
+    ['non-finite.yaml', `contracts:\n  - name: impossible\n    command: node -e "require('node:fs').writeFileSync('${marker}', '')"\n    expect:\n      exitCode: .inf\n`],
+    ['out-of-range.json', JSON.stringify({ contracts: [{ name: 'impossible', command: `node -e "require('node:fs').writeFileSync('${marker}', '')"`, expect: { exitCode: 256 } }] })],
+  ]) {
+    const file = path.join(tmp, name);
+    fs.writeFileSync(file, contents);
+    for (const command of ['inspect', 'run']) {
+      const result = runCli(command, file);
+      assert.equal(result.status, 1, `${command} ${name}`);
+      assert.match(result.stderr, /contracts\[0\]\.expect\.exitCode must be an integer from 0 to 255/);
+      assert.equal(fs.existsSync(marker), false, `${command} ${name} executed the command`);
+    }
+  }
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
