@@ -60,6 +60,9 @@ Run the contract:
 cmdcontract run contracts/readme.yaml --format tap
 ```
 
+TAP output JSON-escapes newlines and other control characters in contract names
+so every contract remains exactly one TAP test record.
+
 Turn JSON results into a Markdown report:
 
 ```bash
