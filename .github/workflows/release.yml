@@ -35,6 +35,8 @@ jobs:
           npm --prefix /tmp/releasebox run build
       - name: ReleaseBox readiness check
         run: node /tmp/releasebox/bin/releasebox.js check .
+      - name: Validate release tag
+        run: node scripts/check-release-tag.mjs
       - name: Run release checks
         run: npm run release:check
       - name: Build package
