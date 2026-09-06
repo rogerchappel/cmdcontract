@@ -2,6 +2,7 @@
 
 ## 0.1.0
 
+- Validate saved run summaries before formatting reports and return stable file/field diagnostics for invalid input.
 - Document pre-publication tarball installation and GitHub-only tag releases.
 - Verify README publication claims and the installed packed CLI in release checks.
 - Add local-first TypeScript CLI MVP.

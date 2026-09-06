@@ -69,6 +69,13 @@ Turn JSON results into a Markdown report:
 cmdcontract report .cmdcontract/results.json --format markdown
 ```
 
+`report` accepts the JSON summary written by `cmdcontract run --out`. It
+validates the summary fields (`contractPath`, `startedAt`, duration and result
+counts) and every result's command, status, exit codes, duration, captured
+output, and string diagnostics before producing JSON, TAP, or Markdown. Invalid
+JSON and missing or wrong-typed fields fail with the results-file path and field
+name; malformed input is never emitted as a successful report.
+
 Inspect a spec when debugging CI:
 
 ```bash
