@@ -4,10 +4,10 @@ import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { initFromReadme } from './init.js';
-import { formatSummary } from './report.js';
+import { formatSummary, validateRunSummary } from './report.js';
 import { runContractFile } from './runner.js';
 import { loadContractFile } from './spec.js';
-import type { OutputFormat, RunSummary } from './types.js';
+import type { OutputFormat } from './types.js';
 
 interface ParsedArgs {
   command?: string;
@@ -133,7 +133,19 @@ async function runCommand(args: ParsedArgs): Promise<number> {
 async function reportCommand(args: ParsedArgs): Promise<number> {
   const resultPath = args.positionals[0];
   if (!resultPath) throw new Error('report requires a results JSON path');
-  const summary = JSON.parse(await fs.readFile(resultPath, 'utf8')) as RunSummary;
+  const invalid = (message: string): Error => new Error(`Invalid results file ${resultPath}: ${message}`);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await fs.readFile(resultPath, 'utf8'));
+  } catch (error) {
+    throw invalid(`cannot parse JSON: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  let summary;
+  try {
+    summary = validateRunSummary(parsed);
+  } catch (error) {
+    throw invalid(error instanceof Error ? error.message : String(error));
+  }
   process.stdout.write(formatSummary(summary, outputFormat(args)));
   return summary.failed === 0 ? 0 : 1;
 }
