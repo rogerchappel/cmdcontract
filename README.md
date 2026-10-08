@@ -129,8 +129,14 @@ npm test
 npm run check
 npm run build
 npm run smoke
+npm run package:smoke
+npm run release:contract
 bash scripts/validate.sh
 ```
+
+`scripts/validate.sh` is the single CI validation entry point. It runs each
+check/test/build/smoke command once, including package and release-contract
+smokes; do not add those same commands separately to the CI workflow.
 
 A real fixture-backed smoke is included at `examples/contracts/happy.yaml`.
 `npm run package:smoke` also checks that the packed release candidate contains
