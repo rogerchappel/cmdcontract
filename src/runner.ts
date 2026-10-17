@@ -98,6 +98,12 @@ function execute(command: string, cwd: string, env: Record<string, string> | und
     child.stderr?.setEncoding('utf8');
     child.stdout?.on('data', (chunk) => (stdout += chunk));
     child.stderr?.on('data', (chunk) => (stderr += chunk));
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      if (escalationTimer) clearTimeout(escalationTimer);
+      stderr += `cmdcontract: failed to start command: ${error.message}`;
+      resolve({ exitCode: null, stdout, stderr, timedOut });
+    });
     child.on('close', (code) => {
       clearTimeout(timer);
       if (escalationTimer) clearTimeout(escalationTimer);
