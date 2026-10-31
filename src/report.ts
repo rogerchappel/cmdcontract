@@ -32,6 +32,7 @@ export function validateRunSummary(value: unknown): RunSummary {
 export function formatSummary(summary: RunSummary, format: OutputFormat): string {
   if (format === 'json') return `${JSON.stringify(summary, null, 2)}\n`;
   if (format === 'tap') return formatTap(summary);
+  if (format === 'junit') return formatJUnit(summary);
   return formatMarkdown(summary);
 }
 
@@ -51,6 +52,20 @@ export function formatMarkdown(summary: RunSummary): string {
     lines.push(`| ${result.passed ? '✅' : '❌'} | ${escapeCell(result.name)} | \`${escapeCell(result.command)}\` | ${escapeCell(result.diagnostics.join('; ') || '—')} |`);
   }
   return `${lines.join('\n')}\n`;
+}
+
+export function formatJUnit(summary: RunSummary): string {
+  const suite = `tests="${summary.total}" failures="${summary.failed}" errors="0" time="${(summary.durationMs / 1000).toFixed(3)}"`;
+  const cases = summary.results.map((result) => {
+    const attrs = `name="${escapeXml(result.name)}" classname="${escapeXml(summary.contractPath)}" time="${(result.durationMs / 1000).toFixed(3)}"`;
+    const failure = result.passed ? '' : `\n    <failure message="${escapeXml(result.diagnostics.join('; ') || `Expected exit code ${result.expectedExitCode}, got ${result.exitCode}`)}">${escapeXml(result.stderr || result.stdout)}</failure>`;
+    return `  <testcase ${attrs}>${failure ? `${failure}\n  ` : ''}</testcase>`;
+  });
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${escapeXml(summary.contractPath)}" ${suite}>\n${cases.join('\n')}\n</testsuite>\n`;
+}
+
+function escapeXml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 }
 
 export function formatTap(summary: RunSummary): string {

@@ -160,7 +160,7 @@ async function inspectCommand(args: ParsedArgs): Promise<number> {
 
 function outputFormat(args: ParsedArgs): OutputFormat {
   const format = stringFlag(args, 'format') ?? 'json';
-  if (format === 'json' || format === 'tap' || format === 'markdown') return format;
+  if (format === 'json' || format === 'tap' || format === 'markdown' || format === 'junit') return format;
   throw new Error(`unsupported format: ${format}`);
 }
 
@@ -170,7 +170,7 @@ function stringFlag(args: ParsedArgs, name: string): string | undefined {
 }
 
 function help(): string {
-  return `cmdcontract - executable CLI contract specs that stay honest\n\nUsage:\n  cmdcontract init [--from README.md] [--out contracts/readme.yaml]\n  cmdcontract run <contract-file> [--format json|tap|markdown] [--out results.json] [--keep-workspace]\n  cmdcontract report <results-json> [--format json|tap|markdown]\n  cmdcontract inspect <contract-file>\n  cmdcontract --help | -h\n  cmdcontract --version\n\nSafety defaults:\n  - Commands run in a temporary workspace.\n  - Only PATH, HOME, CI, NO_COLOR, and contract env are passed through.\n  - Fixture paths must stay inside the contract directory/workspace.\n`;
+  return `cmdcontract - executable CLI contract specs that stay honest\n\nUsage:\n  cmdcontract init [--from README.md] [--out contracts/readme.yaml]\n  cmdcontract run <contract-file> [--format json|tap|markdown|junit] [--out results.json] [--keep-workspace]\n  cmdcontract report <results-json> [--format json|tap|markdown|junit]\n  cmdcontract inspect <contract-file>\n  cmdcontract --help | -h\n  cmdcontract --version\n\nSafety defaults:\n  - Commands run in a temporary workspace.\n  - Only PATH, HOME, CI, NO_COLOR, and contract env are passed through.\n  - Fixture paths must stay inside the contract directory/workspace.\n`;
 }
 
 if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {

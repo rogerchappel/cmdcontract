@@ -183,3 +183,11 @@ The release tag must be exactly `v` followed by the version in `package.json`
 workflow validates this identity before running `npm pack` or creating a
 GitHub release. `npm run release:contract` exercises the same contract during
 local and dry-run verification.
+
+For CI systems that consume JUnit XML, render the saved result with:
+
+```bash
+cmdcontract report .cmdcontract/results.json --format junit
+```
+
+`report` validates the stored summary and supports JSON, TAP, Markdown, and JUnit XML output.
