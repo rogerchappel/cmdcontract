@@ -1,4 +1,4 @@
-export type OutputFormat = 'json' | 'tap' | 'markdown';
+export type OutputFormat = 'json' | 'tap' | 'markdown' | 'junit';
 
 export interface FixtureCopyRule {
   from: string;

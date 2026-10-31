@@ -17,7 +17,7 @@ dangerous commands are skipped. Review generated contracts before running them.
 ## `cmdcontract run`
 
 ```bash
-cmdcontract run <contract-file> [--format json|tap|markdown] [--out .cmdcontract/results.json] [--keep-workspace]
+cmdcontract run <contract-file> [--format json|tap|markdown|junit] [--out .cmdcontract/results.json] [--keep-workspace]
 ```
 
 Runs each contract and prints `json`, `tap`, or `markdown`. Exit code is `1` when any contract fails.
@@ -25,10 +25,10 @@ Runs each contract and prints `json`, `tap`, or `markdown`. Exit code is `1` whe
 ## `cmdcontract report`
 
 ```bash
-cmdcontract report <results-json> [--format json|tap|markdown]
+cmdcontract report <results-json> [--format json|tap|markdown|junit]
 ```
 
-Renders saved JSON results without rerunning commands.
+Renders saved JSON results without rerunning commands. Use `--format junit` to emit JUnit XML for CI result ingestion.
 
 ## `cmdcontract inspect`
 
