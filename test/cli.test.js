@@ -225,6 +225,31 @@ test('CLI report rejects wrong-typed summary and result fields with field diagno
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+test('CLI report rejects inconsistent aggregate counts in every format', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-report-counts-'));
+  const sample = JSON.parse(fs.readFileSync('examples/results/sample-results.json', 'utf8'));
+  const cases = [
+    ['total', (value) => { value.total += 1; }, /total must match results\.length/],
+    ['passed', (value) => { value.passed += 1; }, /passed must match results/],
+    ['failed', (value) => { value.failed += 1; }, /failed must match results/],
+  ];
+
+  for (const [name, mutate, diagnostic] of cases) {
+    const value = structuredClone(sample);
+    mutate(value);
+    const file = path.join(tmp, `${name}.json`);
+    fs.writeFileSync(file, JSON.stringify(value));
+    for (const format of ['json', 'markdown', 'tap', 'junit']) {
+      const result = runCli('report', file, '--format', format);
+      assert.equal(result.status, 1, `${name}/${format}`);
+      assert.equal(result.stdout, '', `${name}/${format}`);
+      assert.match(result.stderr, diagnostic, `${name}/${format}`);
+    }
+  }
+
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 test('CLI report accepts saved output from run in every format', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-report-valid-'));
   const file = path.join(tmp, 'results.json');
