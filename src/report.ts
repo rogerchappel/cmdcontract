@@ -10,12 +10,16 @@ export function validateRunSummary(value: unknown): RunSummary {
   integerField(summary, 'failed');
   if (!Array.isArray(summary.results)) throw new Error('results must be an array');
 
+  let passed = 0;
+  let failed = 0;
   summary.results.forEach((value, index) => {
     const name = `results[${index}]`;
     const result = objectField(value, name);
     stringField(result, 'name', name);
     stringField(result, 'command', name);
     booleanField(result, 'passed', name);
+    if (result.passed) passed += 1;
+    else failed += 1;
     if (result.exitCode !== null) integerField(result, 'exitCode', name);
     integerField(result, 'expectedExitCode', name);
     numberField(result, 'durationMs', name);
@@ -25,6 +29,16 @@ export function validateRunSummary(value: unknown): RunSummary {
       throw new Error(`${name}.diagnostics must be an array of strings`);
     }
   });
+
+  if (summary.total !== summary.results.length) {
+    throw new Error(`total must match results.length (${summary.results.length})`);
+  }
+  if (summary.passed !== passed) {
+    throw new Error(`passed must match results (${passed})`);
+  }
+  if (summary.failed !== failed) {
+    throw new Error(`failed must match results (${failed})`);
+  }
 
   return summary as unknown as RunSummary;
 }
