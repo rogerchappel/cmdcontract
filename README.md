@@ -15,12 +15,17 @@ cd cmdcontract
 npm ci
 npm run build
 package_file="$(npm pack --silent)"
+tar -tzf "$package_file" | grep -Fx 'package/dist/cli.js'
 mkdir -p ../cmdcontract-example
 cd ../cmdcontract-example
 npm init -y
 npm install --save-dev "../cmdcontract/$package_file"
 npx cmdcontract --help
 ```
+
+The `grep` check must print `package/dist/cli.js`; if it does not, stop before
+installing because the tarball is missing the executable configured by the
+package's `cmdcontract` bin entry.
 
 ### After npm publication
 
