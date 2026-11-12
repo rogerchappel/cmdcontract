@@ -32,6 +32,19 @@ test('runContractFile reports command spawn errors without an uncaught exception
   assert.match(summary.results[0].diagnostics.join('\n'), /got null/);
 });
 
+test('runContractFile reports synchronous spawn setup exceptions as failed results', async () => {
+  const preload = path.join(root, 'test/fixtures/spawn-setup-error-preload.cjs');
+  const config = path.join(root, 'test/fixtures/spawn-error.yaml');
+  const child = spawnSync(process.execPath, ['--import', preload, 'dist/cli.js', 'run', config, '--format', 'json'], { encoding: 'utf8' });
+  assert.equal(child.status, 1);
+  assert.doesNotMatch(child.stderr, /uncaught|uncaughtException/i);
+  const summary = JSON.parse(child.stdout);
+  assert.equal(summary.failed, 1);
+  assert.equal(summary.results[0].exitCode, null);
+  assert.match(summary.results[0].stderr, /failed to start command: controlled synchronous setup failure/);
+  assert.match(summary.results[0].diagnostics.join('\n'), /got null/);
+});
+
 test('runContractFile fails timed-out commands and terminates their process tree', async () => {
   const summary = await runContractFile(path.join(root, 'test/fixtures/timeout.yaml'));
 
