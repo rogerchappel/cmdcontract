@@ -70,7 +70,9 @@ interface ExecutionResult {
 
 function execute(command: string, cwd: string, env: Record<string, string> | undefined, timeoutMs: number): Promise<ExecutionResult> {
   return new Promise((resolve) => {
-    const child = spawn(command, {
+    let child: ReturnType<typeof spawn>;
+    try {
+      child = spawn(command, {
       cwd,
       shell: true,
       detached: process.platform !== 'win32',
@@ -82,7 +84,12 @@ function execute(command: string, cwd: string, env: Record<string, string> | und
         ...env,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
-    });
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      resolve({ exitCode: null, stdout: '', stderr: `cmdcontract: failed to start command: ${message}`, timedOut: false });
+      return;
+    }
     let stdout = '';
     let stderr = '';
     let timedOut = false;
