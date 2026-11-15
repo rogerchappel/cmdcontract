@@ -18,6 +18,32 @@ test('CLI inspect reports contract names', () => {
   assert.match(result.stdout, /reads copied fixture/);
 });
 
+test('clean removes package dist from any working directory only', () => {
+  const packageRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-clean-package-'));
+  const unrelated = fs.mkdtempSync(path.join(os.tmpdir(), 'cmdcontract-clean-cwd-'));
+  const unrelatedDist = path.join(unrelated, 'dist');
+  fs.mkdirSync(unrelatedDist);
+  fs.writeFileSync(path.join(unrelatedDist, 'keep.txt'), 'preserve');
+  fs.copyFileSync(path.join(process.cwd(), 'package.json'), path.join(packageRoot, 'package.json'));
+  fs.mkdirSync(path.join(packageRoot, 'dist'));
+
+  try {
+    const result = spawnSync('npm', ['run', 'clean', '--prefix', packageRoot], { cwd: unrelated, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(fs.existsSync(path.join(packageRoot, 'dist')), false);
+    assert.equal(fs.readFileSync(path.join(unrelatedDist, 'keep.txt'), 'utf8'), 'preserve');
+
+    fs.mkdirSync(path.join(packageRoot, 'dist'));
+    const fromPackageRoot = spawnSync('npm', ['run', 'clean', '--prefix', packageRoot], { cwd: packageRoot, encoding: 'utf8' });
+    assert.equal(fromPackageRoot.status, 0, fromPackageRoot.stderr);
+    assert.equal(fs.existsSync(path.join(packageRoot, 'dist')), false);
+    assert.equal(fs.readFileSync(path.join(unrelatedDist, 'keep.txt'), 'utf8'), 'preserve');
+  } finally {
+    fs.rmSync(packageRoot, { recursive: true, force: true });
+    fs.rmSync(unrelated, { recursive: true, force: true });
+  }
+});
+
 test('CLI accepts documented help, version, and inline option values', () => {
   for (const args of [['--help'], ['-h'], ['--version']]) {
     assert.equal(runCli(...args).status, 0);
