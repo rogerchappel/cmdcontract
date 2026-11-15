@@ -25,7 +25,7 @@
     "CONTRIBUTING.md"
   ],
   "scripts": {
-    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node -e \"const fs=require('node:fs');const path=require('node:path');const root=path.resolve(path.dirname(process.env.npm_package_json));const target=path.resolve(root,'dist');if(path.dirname(target)!==root)throw new Error('Refusing to clean outside package root');fs.rmSync(target,{recursive:true,force:true})\"",
     "build": "npm run clean && tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test test/*.test.js",
