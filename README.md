@@ -4,6 +4,10 @@ Executable CLI contract specs that stay honest ✅
 
 `cmdcontract` is a tiny local-first test harness for README examples, CLI smoke tests, and agent-written tools. It copies fixtures into a temp workspace, runs documented commands with a safe minimal environment, normalizes noisy output, and reports drift before your docs lie to people.
 
+## Requirements
+
+Supported Node.js majors are 20, 22, 24, and 25. The package engine range is `>=20 <26`; CI tests each supported major. Add a major to the CI matrix and update this range when support policy changes.
+
 ## Install
 
 `cmdcontract` is not published to the npm registry yet. From a clean checkout,
