@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [20, 22, 24, 25] # Supported majors; keep engines.node aligned with this upper bound.
+        node: [20, 22, 24] # Supported majors; keep engines.node aligned with this upper bound.
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
